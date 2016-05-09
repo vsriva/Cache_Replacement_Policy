@@ -1,0 +1,321 @@
+#include<stdio.h>
+#include "double_linklist_ARC.h"
+#include<time.h>
+
+#define T1 1
+#define B1 2
+#define T2 3
+#define B2 4
+#define L1 5
+
+struct file_con
+{
+    int start_blk;
+    int no_of_block;
+    int ign;
+    int req_no;
+    struct file_con *next;
+};
+
+int delta(int a, int b)//a=B1,b=B2
+{
+      return (a > b ? 1 : b/a);
+}
+
+int max(int a, int b)
+{
+      return (a > b ? a : b);
+}
+int min(int a ,int b)
+{
+      return (a < b ? a : b);
+}
+
+
+int replace(struct block **head_T1,struct block **head_T2,struct block **tail_T1,struct block **tail_T2,struct block **head_B1,struct block **head_B2,struct block **tail_B1,struct block **tail_B2,int block_no,int p)
+{
+    int mod_T1=0,blocks=0;
+    int node=0;
+    mod_T1=list_length(*head_T1);
+    //printf("\nIn rep:%d",p);
+    if((mod_T1 != 0)&&((mod_T1>p)||((search(block_no,*head_B2,*tail_B2,B2) != NULL)&&(mod_T1==p))))
+    {
+//        printf("\nFirst");
+        blocks=pop(tail_T1,head_T1,T1);
+        if(blocks != -1)
+        *head_B1=push(blocks,0,head_B1,tail_B1,B1);
+//        node=search(block_no,*head_T1,*tail_T1,T1);
+//        *head_B1=remove_push(*head_B1, node, tail_T1);
+
+    }
+    else
+    {
+//        node=search(block_no,*head_T2,*tail_T2,T2);
+//        *head_B2=remove_push(*head_B2, node, tail_T2);
+        //printf("\nSecond");
+//        list_display(*head_B2);
+        blocks=pop(tail_T2,head_T2,T2);
+        if (blocks != -1)
+        *head_B2=push(blocks,0,head_B2,tail_B2,B2);
+        //printf("Replaced");
+//        list_display(*head_B2);
+
+    }
+    return 0;
+
+}
+
+struct file_con *file_enter(char *filename)
+{
+
+    FILE *fp;
+    //int *hash_table=calloc(999*9999,sizeof(int));
+    int i=0,j=0;
+
+    struct file_con *test,*head,*top;
+    test = (struct file_con *) malloc( sizeof(struct file_con) );
+    head=test;
+    top=test;
+    fp=fopen(filename,"r");
+    while (fscanf(fp,"%d %d %d %d",&(test->start_blk),&(test->no_of_block),&(test->ign),&(test->req_no))==4)
+    {
+        //printf("The output:%d,%d,%d,%d\n",(test->start_blk),(test->no_of_block),(test->ign),(test->req_no));
+        //i=(test->start_blk)/10000;
+        //j=(test->start_blk)%10000;
+        //hash_table[i*10000+j]=1;
+        test->next= (struct file_con *) malloc( sizeof(struct file_con) );
+        test=test->next;
+
+    }
+    test->next=NULL;
+
+//For checking linked list contents
+//    while(head->next != NULL)
+//    {
+//        printf("The output:%d,%d,%d,%d\n",(head->start_blk),(head->no_of_block),(head->ign),(head->req_no));
+//        head=head->next;
+//    }
+//
+//
+
+    //Problem for return statement.
+    fclose(fp);
+
+    return top;
+}
+
+
+
+int ARC(int c, char *filename,struct file_con *top)//make it read from link list
+{
+    int tag;
+    int no_of_blk;
+    int ign;
+    int req_no;
+    int block_no;
+    struct block *head_T1=NULL, *tail_T1=NULL;
+    struct block *head_B1=NULL, *tail_B1=NULL;
+    struct block *head_T2=NULL, *tail_T2=NULL;
+    struct block *head_B2=NULL, *tail_B2=NULL;
+    struct block *head_L1=NULL, *tail_L1=NULL;
+    struct block *found_T2ptr=NULL,*found_T1ptr=NULL;
+    struct block *found_T1=NULL,*found_B1=NULL,*found_B2=NULL,*found_T2=NULL;
+
+    struct block *node=NULL;
+    int miss=0,hit=0;
+    int count=0,entry=0;
+    int rem_blk;
+    int i=0,p=0,d=0;
+    FILE *fp;
+    float no_of_request=0;
+    float hit_ratio=0;
+    int mod_T1=0,mod_B1=0,mod_T2=0,mod_B2=0;
+    int un=0;
+
+    //int *hash_table[999][99][99]; //Try to have 2D matrix of int ptr to another sorted linked list, where each element of ptr could point to the req node(/parent node)
+
+    fp=fopen(filename,"r");
+
+    //head=start_blk(head);
+
+//    while(fscanf(fp,"%d %d %d %d",&(tag),&(no_of_blk),&(ign),&(req_no))==4)
+    while(top->next != NULL)
+    {
+        tag=top->start_blk;
+        no_of_blk=top->no_of_block;
+        ign=top->ign;
+        req_no=top->req_no;
+        printf("\nServing request no.:%d",req_no);
+        no_of_request +=no_of_blk;
+        //printf("\nNo.of reques:%f",no_of_request);
+        for (i=0;i<no_of_blk;i++)
+        {
+
+            block_no =tag+i;
+            //printf("\nSearch");
+
+            found_T1=hash_search(block_no,T1);//Need to design. Implement before a hash table check
+            //printf("\nSearch comp T1:%x",found_T1);
+            found_T2=hash_search(block_no,T2);//Need to design. Implement before a hash table check
+            //printf("\nSearch comp T2:%x",found_T2);
+            found_B1=hash_search(block_no,B1);//Need to design. Implement before a hash table check
+            //printf("\nSearch comp B1:%x",found_B1);
+            found_B2=hash_search(block_no,B2);//Need to design. Implement before a hash table check
+            //printf("\nSearch comp B2:%x",found_B2);
+            if (found_T1 != NULL)
+            {
+                hit++;
+                printf("\nHit1.1");
+        //        head_T1=remove_push(&head_T1,&head_T1,found_T1,&tail_T1,&head_T1,T1,T1);
+                printf("\n%x %x, %x",head_T1,tail_T1,found_T1);
+                //list_display(head_T1);
+                found_T1=rem(&head_T1,found_T1,&tail_T1,T1);
+                printf("\nWha");
+                head_T1=push(found_T1->tag,0,&head_T2,&tail_T2,T2);
+                printf("\nWha");
+
+                head_T2=push(found_T1->tag,0,&head_T2,&tail_T2,T2);
+
+            }
+            else if (found_T2 != NULL)
+            {
+                hit++;
+                printf("\nHit2");
+                found_T2=rem(&head_T2,found_T2,&tail_T2,T2);
+                head_T2=push(found_T2->tag,0,&head_T2,&tail_T2,T2);
+                //head_T2=remove_push(&head_T2,&head_T2,found_T2,&tail_T2,&head_T2,T2,T2);
+            }
+            else if ((found_B1 != NULL))
+            {
+                printf("\nMiss1");
+                miss++;
+                mod_B1=list_length(head_B1);
+                mod_B2=list_length(head_B2);
+                p=min(p+delta(mod_B1,mod_B2),c);
+                //printf("Miss1 cal p");
+                //Think about Replace
+                //printf("H_T1:%x H_T2:%x T_T1:%x T_T2:%x H_B1:%x H_B2:%x T_B1:%x T_B2:%x, Block no:%d,Point:%d",head_T1,head_T2,tail_T1,tail_T2,head_B1,head_B2,tail_B1,tail_B2,block_no,p);
+                replace(&head_T1,&head_T2,&tail_T1,&tail_T2,&head_B1,&head_B2,&tail_B1,&tail_B2,block_no,p);
+                node=hash_search(block_no,B1);
+                //printf("\nReturn node:%x",node);
+                //printf("search_comp");
+                //printf("\nH_T2:%x T_T2:%x H_B1:%x T_B1:%x, Block no:%d,Point:%d",head_T2,tail_T2,head_B1,tail_B1,block_no,p);
+                //printf("\nADD: H_T2:%x T_T2:%x H_B1:%x T_B1:%x Node:%x",&head_T2,&tail_T2,&head_B1,&tail_B1,node);
+                node=rem(&head_B1,node,&tail_B1,B1);
+                head_T2=push(node->tag,0,&head_T2,&tail_T2,T2);
+
+                //head_T2=remove_push(&head_T2,&head_B1,node,&tail_T2,&tail_B1,T2,B1);
+                //printf("search_comp");
+            }
+            else if ((found_B2 != NULL))
+            {
+                printf("\nMiss2");
+                miss++;
+                mod_B1=list_length(head_B1);
+                mod_B2=list_length(head_B2);
+                p=min(p-delta(mod_B2,mod_B1),0);
+                //Think about Replace
+                replace(&head_T1,&head_T2,&tail_T1,&tail_T2,&head_B1,&head_B2,&tail_B1,&tail_B2,block_no,p);
+                node=search(block_no,head_B2,tail_B2,B2);
+
+                node=rem(&head_B2,node,&tail_B2,B2);
+                head_T2=push(node->tag,0,&head_T2,&tail_T2,T2);
+//                head_T2=remove_push(&head_T2,&head_B2,node,&tail_T2,&tail_B2,T2,B2);
+
+            }
+            else
+            {
+                printf("\nMiss3");
+                un=list_unio(head_T1,head_B1,tail_T1,tail_B1,T1,B1);
+                //printf("\nunio served");
+                if(un==c)
+                {
+                    //printf("\n==c");
+                    if(list_length(head_T1)<c)
+                    {
+                        pop(&tail_B1,&head_B1,B1);
+                        replace(&head_T1,&head_T2,&tail_T1,&tail_T2,&head_B1,&head_B2,&tail_B1,&tail_B2,block_no,p);
+                    }
+                    else
+                    {
+                        //printf("\nPop %x %x",tail_T1,tail_T1->prev);
+                        pop(&tail_T1,&head_T1,T1);
+                        //printf("\npopped");
+                    }
+                }
+                else if(un<c)
+                {
+                    //printf("\n!=c");
+                    mod_T1=list_length(head_T1);
+                    mod_T2=list_length(head_T2);
+                    mod_B1=list_length(head_B1);
+                    mod_B2=list_length(head_B2);
+                    //printf("\nLength");
+
+                    if((mod_T1+mod_T2+mod_B1+mod_B2)>=c)
+                    {
+                        //printf("\nIN");
+                        if((mod_T1+mod_T2+mod_B1+mod_B2)==2*c)
+                        {
+                            //printf("\nunpoped");
+                            pop(&tail_B2,&head_B2,B2);
+                            //printf("\npoped");
+                        }
+
+                        replace(&head_T1,&head_T2,&tail_T1,&tail_T2,&head_B1,&head_B2,&tail_B1,&tail_B2,block_no,p);
+                    }
+                                            //printf("\n <=c");
+
+                }
+                printf("\nH:%x T:%x",head_T1,tail_T1);
+                head_T1=push(block_no,0,&head_T1,&tail_T1,T1);
+                                        //printf("\npush");
+            }
+
+        }
+        top=top->next;
+
+    }
+    fclose(fp);
+
+    hit_ratio=(no_of_request- miss)/no_of_request;
+    printf("\nNo.of requests:%f\nHit ratio:%f",no_of_request,hit_ratio);
+    return miss;
+}
+
+int main()
+{
+    clock_t begin, end, full_begin, full_end;
+    double time_spent,tot_time_spent;
+    char filename[]="P3.lis";
+    struct file_con *top;
+    int i=0;
+    printf("File:%s, %d",filename,sizeof(int));
+    top=file_enter(filename);
+
+    full_begin = clock();
+
+    for (i=0;i<1;i++)
+    {
+        begin = clock();
+        printf("\nStarting for cache size:%d",(10<<i));
+        printf("\nNo. of Misses:%d",ARC((10<<i),filename,top));
+        //printf("\nOK,%d",bit_size(2000));
+        end = clock();
+        time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
+
+        printf("\nOK,Time:%lf",time_spent);
+
+    }
+    full_end=clock();
+        time_spent = (double)(full_end - full_begin) / CLOCKS_PER_SEC;
+
+        printf("\nComplete Time:%lf",time_spent);
+
+
+//    printf("\nNo. of Misses:%d",LRU(1024,filename));
+//    printf("\nOK,%d",bit_size(2000));
+
+
+    return 0;
+}

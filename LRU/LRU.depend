@@ -1,0 +1,16 @@
+# depslib dependency file v1.0
+1448861765 source:c:\users\vishal\dropbox\codes\c\lru\project3.c
+	<stdio.h>
+	<stdlib.h>
+	"double_linklist.h"
+	<time.h>
+
+1448601287 c:\users\vishal\dropbox\codes\c\lru\double_linklist.h
+	<stdio.h>
+	<stdlib.h>
+	"hash_table.h"
+
+1448867123 c:\users\vishal\dropbox\codes\c\lru\hash_table.h
+	<stdio.h>
+	<stdlib.h>
+
